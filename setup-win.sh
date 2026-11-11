@@ -19,7 +19,12 @@ fi
 git -C "$ufe3" checkout --quiet "$ufe3_commit"
 git -C "$ufe3" config core.autocrlf false
 git -C "$ufe3" config core.eol lf
-find "$ufe3" -name '*.sh' -not -path '*/tools/*' -exec sed -i 's/\r$//' {} +
+find "$ufe3" \( -name '*.sh' -o -name '*.py' \) -not -path '*/tools/*' -exec sed -i 's/\r$//' {} +
+if git -C "$ufe3" apply --check "$root/windows/ufe3-windows-fixes.patch" 2>/dev/null; then
+    git -C "$ufe3" apply "$root/windows/ufe3-windows-fixes.patch"
+else
+    echo "ufe3 windows fixes already applied; leaving sources as is" >&2
+fi
 
 if [ ! -d "$tools/.git" ]; then
     git clone https://github.com/ran-j/PS2Recomp "$tools"
