@@ -49,8 +49,10 @@ cmake -S "$tools" -B "$tools/build" -G Ninja \
 cmake --build "$tools/build" --target ps2_recomp ps2_analyzer ps2EntryRunner -j "$(nproc)"
 
 mingwbin=$(dirname "$(command -v g++)")
-for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
-    [ -f "$mingwbin/$dll" ] && cp -f "$mingwbin/$dll" "$tools/build/ps2xRuntime/"
+for dir in ps2xRecomp ps2xAnalyzer ps2xRuntime; do
+    for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
+        [ -f "$mingwbin/$dll" ] && cp -f "$mingwbin/$dll" "$tools/build/$dir/"
+    done
 done
 
 mkdir -p "$ufe3/disc"
