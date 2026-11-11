@@ -3,3 +3,4 @@ shims/
 disc/
 *.log
 ps2EntryRunner.exe
+/play.cmd

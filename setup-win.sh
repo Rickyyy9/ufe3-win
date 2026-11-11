@@ -8,6 +8,14 @@ tools=$deps/PS2Recomp
 ufe3_commit=3b7515ebd5a1e21981d4d9eb31b0b9a0d85b5b2a
 ps2recomp_commit=c5a9d02573410a2085a4b4b831b0b68ba3515440
 
+fetch_only=0
+for arg in "$@"; do
+    case "$arg" in
+        --fetch-only) fetch_only=1 ;;
+        *) echo "unknown option: $arg" >&2; exit 2 ;;
+    esac
+done
+
 mkdir -p "$deps" "$root/shims"
 printf '#!/usr/bin/env bash\nexec python "$@"\n' > "$root/shims/python3"
 chmod +x "$root/shims/python3"
@@ -40,6 +48,12 @@ if git -C "$tools" apply --check "$root/windows/windows-build-fixes.patch" 2>/de
     git -C "$tools" apply "$root/windows/windows-build-fixes.patch"
 else
     echo "windows fixes already applied; leaving sources as is" >&2
+fi
+
+if [ "$fetch_only" = 1 ]; then
+    echo "Sources fetched and patched: $ufe3, $tools"
+    echo "Extract your own disc image into $ufe3/disc, then run ./setup-win.sh again."
+    exit 0
 fi
 
 cmake -S "$tools" -B "$tools/build" -G Ninja \

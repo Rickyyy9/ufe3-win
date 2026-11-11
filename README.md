@@ -31,6 +31,33 @@ it stalls ahead of scene 7. Details in
 
 Visual Studio, WSL, and Linux are not required.
 
+## Installer (recommended)
+
+`install.cmd` runs the whole flow: toolchain check, pinned source fetch, disc
+verification and extraction, build, and a `play.cmd` launcher plus desktop
+shortcut.
+
+1. Download this repository (Code → Download ZIP) and extract it, or clone it.
+2. Keep your own Japanese disc dump (`.iso`) somewhere local.
+3. Double-click `install.cmd`, or run it from a terminal.
+
+```bat
+install.cmd
+```
+
+If build tools are missing, the installer prints the winget commands and offers
+to run them. Expect 30-90 minutes for the recompilation.
+
+Non-interactive example:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File install-windows.ps1 -Iso D:\dump\ufe3.iso -AcceptOwnership
+```
+
+`-ForceExtract` extracts the disc again; `-NoShortcut` skips the desktop shortcut.
+The installer never downloads game data and does not ship an executable: every
+build is generated locally from your own disc.
+
 ## Usage
 
 ```bash
@@ -59,6 +86,12 @@ To reuse an existing checkout, point `UFE3_DEPS` at a directory that contains `u
 and `PS2Recomp/`.
 
 ## Windows fixes
+
+`windows/ufe3-windows-fixes.patch` (game project) does two things:
+
+1. `erx_wrap.py` emits TOML paths with forward slashes, because TOML treats `\` as an escape.
+2. `rebuild.sh` regenerates `erx/step2/out/erx_bindings.json` before step 3. The pinned tree
+   skips it, so a clean build fails with `FileNotFoundError` in `erx_tables.py`.
 
 `windows/windows-build-fixes.patch` is applied after upstream's `patches/ps2recomp.patch`:
 
