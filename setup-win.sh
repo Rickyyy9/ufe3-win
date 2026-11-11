@@ -17,6 +17,9 @@ if [ ! -d "$ufe3/.git" ]; then
     git clone https://github.com/idiazraz/ufe3-recomp "$ufe3"
 fi
 git -C "$ufe3" checkout --quiet "$ufe3_commit"
+git -C "$ufe3" config core.autocrlf false
+git -C "$ufe3" config core.eol lf
+find "$ufe3" -name '*.sh' -not -path '*/tools/*' -exec sed -i 's/\r$//' {} +
 
 if [ ! -d "$tools/.git" ]; then
     git clone https://github.com/ran-j/PS2Recomp "$tools"
