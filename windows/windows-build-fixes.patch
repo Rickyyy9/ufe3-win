@@ -1,0 +1,71 @@
+diff --git a/ps2xRuntime/src/lib/ipu/IPU.h b/ps2xRuntime/src/lib/ipu/IPU.h
+index 204eca9..dec4e0b 100644
+--- a/ps2xRuntime/src/lib/ipu/IPU.h
++++ b/ps2xRuntime/src/lib/ipu/IPU.h
+@@ -283,6 +283,7 @@ union tIPU_cmd
+ // global owned by this core (defined in IPU.cpp) and mirrored into the runtime's
+ // IO-register map by the adapter (ps2_ipu.cpp).
+ extern IPUregisters ipuRegs;
++alignas(16) extern tIPU_BP g_BP;
+ 
+ extern bool FMVstarted;
+ extern bool EnableFMV;
+diff --git a/ps2xRuntime/src/lib/ipu/ipu_core.h b/ps2xRuntime/src/lib/ipu/ipu_core.h
+index 1a349bf..3b23878 100644
+--- a/ps2xRuntime/src/lib/ipu/ipu_core.h
++++ b/ps2xRuntime/src/lib/ipu/ipu_core.h
+@@ -303,10 +303,6 @@ extern void IPUProcessInterrupt();
+ 
+ 
+ 
+-#ifdef _MSC_VER
+-#define BigEndian(in) _byteswap_ulong(in)
+-#else
+-#define BigEndian(in) __builtin_bswap32(in) // or we could use the asm function bswap...
+ // [PS2Recomp port] MSVC _byteswap paths dropped; always __builtin_bswap.
+ #define BigEndian(in) __builtin_bswap32(in)
+ #define BigEndian64(in) __builtin_bswap64(in)
+diff --git a/ps2xRuntime/src/lib/ipu/IPU_Fifo.cpp b/ps2xRuntime/src/lib/ipu/IPU_Fifo.cpp
+index 8444b67..5d7237f 100644
+--- a/ps2xRuntime/src/lib/ipu/IPU_Fifo.cpp
++++ b/ps2xRuntime/src/lib/ipu/IPU_Fifo.cpp
+@@ -6,8 +6,7 @@
+ // See THIRD_PARTY.md at the worktree root.
+ 
+ #include "ipu_compat.h"
+-#include "ipu_core.h"
+-#include "ipu_dma.h"
++#include "IPU.h"
+ 
+ alignas(16) IPU_Fifo ipu_fifo;
+ 
+diff --git a/ps2xRuntime/src/lib/ps2_runtime.cpp b/ps2xRuntime/src/lib/ps2_runtime.cpp
+index 398d2b4..136677d 100644
+--- a/ps2xRuntime/src/lib/ps2_runtime.cpp
++++ b/ps2xRuntime/src/lib/ps2_runtime.cpp
+@@ -1,7 +1,9 @@
++#if defined(__linux__)
+ #include <sys/prctl.h>
+ #include <dlfcn.h>
+ #include <ucontext.h>
+ #include <sys/time.h>
++#endif
+ #include <csignal>
+ #include "ps2_runtime.h"
+ #include "ps2_log.h"
+@@ -500,6 +502,7 @@ uint32_t g_ps2WatchValue = g_ps2WatchValueOn ? static_cast<uint32_t>(std::strtou
+ 
+ bool g_ps2TraceFloat = std::getenv("PS2X_TRACE_FLOAT") != nullptr;
+ 
++#if defined(__linux__)
+ // PS2X_PROFILE=<file>: SIGPROF sampler. Every 1 ms of process CPU time the interrupted RIP is
+ // counted; every 15 s the histogram (rip offsets from the executable's load base) is rewritten
+ // to <file>. Resolve offline against `nm -C ps2EntryRunner`.
+@@ -578,6 +581,7 @@ namespace
+         return true;
+     }();
+ }
++#endif
+ 
+ void ps2ReportFloatEvent(const char *what, uint32_t pc, float a, float b, float result)
+ {

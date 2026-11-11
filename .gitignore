@@ -1,0 +1,5 @@
+deps/
+shims/
+disc/
+*.log
+ps2EntryRunner.exe
