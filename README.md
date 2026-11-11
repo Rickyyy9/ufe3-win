@@ -1,37 +1,37 @@
 # ufe3-win
 
-Jalur build **Windows (MinGW-w64)** untuk static recompilation *Ultraman Fighting Evolution 3*
-(PS2, `SLPS-25441`) berbasis [idiazraz/ufe3-recomp](https://github.com/idiazraz/ufe3-recomp)
-dan [ran-j/PS2Recomp](https://github.com/ran-j/PS2Recomp).
+Windows (**MinGW-w64**) build path for the static recompilation of *Ultraman Fighting Evolution 3*
+(PS2, `SLPS-25441`), built on [idiazraz/ufe3-recomp](https://github.com/idiazraz/ufe3-recomp)
+and [ran-j/PS2Recomp](https://github.com/ran-j/PS2Recomp).
 
-Repo ini **tidak memuat data game** dan tidak memuat sumber PS2Recomp; semuanya diambil
-oleh `setup-win.sh` pada commit yang dipin.
+This repo contains **no game data** and no PS2Recomp sources; `setup-win.sh` fetches everything
+at pinned commits.
 
 ## Status
 
-| Bagian | Status |
+| Area | Status |
 | --- | --- |
-| Build Windows (`ps2_recomp`, `ps2_analyzer`, `ps2EntryRunner`) | berhasil |
-| Recompile ELF + 62 modul ERX | berhasil bila disc tersedia |
-| Game bisa dimainkan penuh | **belum** — upstream masih *early, not playable* |
+| Windows build (`ps2_recomp`, `ps2_analyzer`, `ps2EntryRunner`) | working |
+| ELF + 62 ERX modules recompiled | working when a disc image is present |
+| Fully playable | **not yet** — upstream is still *early, not playable* |
 
-Progres upstream saat ini: boot, cek memory card, health warning, opening FMV, title screen
-menerima input, dan satu pertarungan Story mode sudah ter-render 3D — berjalan sekitar
-1/5 real-time lalu macet sebelum scene 7. Detail ada di
-[docs/NOTES.md](https://github.com/idiazraz/ufe3-recomp/blob/main/docs/NOTES.md) dan
+Current upstream progress: boot, memory-card check, health warning, opening FMV, title screen
+accepts input, and one Story-mode fight renders in 3D — running at roughly 1/5 real time before
+it stalls ahead of scene 7. Details in
+[docs/NOTES.md](https://github.com/idiazraz/ufe3-recomp/blob/main/docs/NOTES.md) and
 [work/mimo_title.md](https://github.com/idiazraz/ufe3-recomp/blob/main/work/mimo_title.md).
 
-## Kebutuhan
+## Requirements
 
-- Windows 10/11 x64 dengan CPU AVX2 (x86-64-v3)
+- Windows 10/11 x64 with AVX2 (x86-64-v3)
 - Git Bash
-- MinGW-w64 GCC (UCRT) dengan `g++`, `ninja`, `cmake` di `PATH`
-- Python 3 (`python` di `PATH`)
-- Disc/ISO milik sendiri, region Jepang `SLPS-25441`
+- MinGW-w64 GCC (UCRT) with `g++`, `ninja`, and `cmake` on `PATH`
+- Python 3 (`python` on `PATH`)
+- Your own disc dump, Japanese region `SLPS-25441`
 
-Tidak perlu Visual Studio, WSL, atau Linux.
+Visual Studio, WSL, and Linux are not required.
 
-## Pemakaian
+## Usage
 
 ```bash
 git clone https://github.com/Rickyyy9/ufe3-win.git
@@ -39,44 +39,45 @@ cd ufe3-win
 ./setup-win.sh
 ```
 
-Ekstrak dump disc milikmu ke `deps/ufe3-recomp/disc`:
+Extract your own disc dump into `deps/ufe3-recomp/disc`:
 
 ```bash
 /c/Windows/System32/tar.exe -xf your.iso -C deps/ufe3-recomp/disc
 ```
 
-Lalu:
+Then:
 
 ```bash
 ./build-win.sh
 ./run-win.sh
 ```
 
-`build-win.sh` menjalankan `rebuild.sh` milik upstream (generate kode C++ + ERX) dan
-membangun ulang runner. `run-win.sh` menjalankan `ps2EntryRunner.exe` dari folder `disc`.
+`build-win.sh` runs upstream's `rebuild.sh` (C++ and ERX code generation) and rebuilds the
+runner. `run-win.sh` starts `ps2EntryRunner.exe` from the `disc` folder.
 
-Untuk memakai checkout yang sudah ada, set `UFE3_DEPS` ke direktori yang berisi
-`ufe3-recomp/` dan `PS2Recomp/`.
+To reuse an existing checkout, point `UFE3_DEPS` at a directory that contains `ufe3-recomp/`
+and `PS2Recomp/`.
 
-## Perbaikan Windows
+## Windows fixes
 
-`windows/windows-build-fixes.patch` diterapkan setelah `patches/ps2recomp.patch` upstream:
+`windows/windows-build-fixes.patch` is applied after upstream's `patches/ps2recomp.patch`:
 
-1. `ps2_runtime.cpp` — profiler SIGPROF (`prctl`, `ucontext`, `dladdr`) dibatasi `#if defined(__linux__)`.
-2. `IPU.h` — menambahkan deklarasi `extern tIPU_BP g_BP;` yang hilang.
-3. `IPU_Fifo.cpp` — include diarahkan ke `IPU.h` (menggantikan `ipu_core.h`/`ipu_dma.h` yang tidak valid).
-4. `ipu_core.h` — menghapus `#ifdef _MSC_VER` tanpa `#endif` sisa port PCSX2.
+1. `ps2_runtime.cpp` — the SIGPROF profiler (`prctl`, `ucontext`, `dladdr`) is now guarded by `#if defined(__linux__)`.
+2. `IPU.h` — adds the missing `extern tIPU_BP g_BP;` declaration.
+3. `IPU_Fifo.cpp` — includes `IPU.h` instead of the invalid `ipu_core.h`/`ipu_dma.h`.
+4. `ipu_core.h` — removes an `#ifdef _MSC_VER` without `#endif` left over from the PCSX2 port.
 
-Catatan: 1 hanya soal platform. 2–4 adalah bug port yang juga menggagalkan build bersih di Linux.
+Note: fix 1 is platform-specific; 2–4 are port bugs that also break a clean Linux build.
 
-## Batasan
+## Limitations
 
-- FFmpeg dimatikan saat configure (`PS2X_ENABLE_FFMPEG=OFF`) karena prebuilt-nya MSVC;
-  decoding video memakai jalur stub.
-- Audio SPU2/IPU masih parsial, ERX dan performa VU1/GS belum selesai.
-- Repo ini bukan emulator dan tidak menyertakan game. Gunakan hanya dengan disc yang kamu miliki.
+- FFmpeg is disabled at configure time (`PS2X_ENABLE_FFMPEG=OFF`) because its prebuilt binaries
+  are MSVC-only; video decoding falls back to stub frames.
+- SPU2/IPU audio is still partial, and ERX plus VU1/GS performance are unfinished.
+- This is not an emulator and it ships no game. Use it only with a disc you own.
 
-## Lisensi
+## License
 
-GPL-3.0, mengikuti ufe3-recomp dan PS2Recomp. Kode IPU berasal dari PCSX2 (GPL-3.0+).
-Ultraman dan game terkait adalah merek dagang pemiliknya; proyek ini tidak berafiliasi.
+GPL-3.0, matching ufe3-recomp and PS2Recomp. The IPU code is derived from PCSX2 (GPL-3.0+).
+Ultraman and the game are trademarks and copyrights of their owners; this project is not
+affiliated with them.
