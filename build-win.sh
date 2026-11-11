@@ -19,6 +19,10 @@ export PATH="$root/shims:$PATH"
     exit 1
 }
 
+if [ ! -f "$ufe3/erx/out/manifest.json" ] || ! compgen -G "$ufe3/erx/out/*.bin" > /dev/null; then
+    python3 "$ufe3/erx/erx_prelink.py" --root "$ufe3"
+fi
+
 cd "$ufe3"
 ./rebuild.sh
 echo "Runner: $PS2X_RUNNER"
